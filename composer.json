@@ -2,6 +2,7 @@
   "name": "mkcrab/poster",
   "description": "图片海报，图片合成，合成海报",
   "type": "library",
+  "version": "1.0.0",
   "autoload": {
     "psr-4": {
       "Mkcrab\\Poster\\": "src/"
