@@ -9,11 +9,6 @@ namespace Mkcrab\Poster;
  */
 class Poster
 {
-    /**
-     * 错误信息
-     * @var string
-     */
-    public $error = '';
 
     /**
      * 配置
@@ -22,10 +17,10 @@ class Poster
     public $config = [];
 
     /**
-     * 字体
+     * 错误信息
      * @var string
      */
-    public $fontPath = '';
+    public $error = '';
 
     /**
      * 背景
@@ -76,7 +71,7 @@ class Poster
      * @param $config array 指定的配置信息
      * 合并后的完整配置信息
      */
-    public function setConfig($config = [])
+    public function config($config = [])
     {
         $this->backGroundImage = isset($config['bg_url']) ? $config['bg_url'] : '';
         if (isset($config['image']) && $config['image']) {
@@ -93,21 +88,16 @@ class Poster
         } else {
             $this->config['text'] = [];
         }
-        return $this->config;
+        return $this;
     }
 
     /**
      * 合并生成海报
      * @param $file string 指定生成的图片路径
-     * @param bool $base64 输出 base64
      * @return string or bool 图片数据流或者处理结果状态
      */
-    public function make($file = '', $base64 = false)
+    public function make($file = '')
     {
-        if (!$file) {
-            $this->error = '未设置生成图片路径';
-            return false;
-        }
         if (!$this->backGroundImage || ((strpos($this->backGroundImage, 'http') === false) && !is_file($this->backGroundImage))) {
             $this->error = '未设置背景图片';
             return false;
@@ -221,26 +211,22 @@ class Poster
                 imagettftext($bgImgData, $val['fontSize'], $val['angle'], $val['left'], $val['top'], $fontColor, $fontPath, $val['text']);
             }
         }
-        $res = ImagePng($bgImgData, $file, 8); //保存到本地
-        ImageDestroy($bgImgData);
-        if ($res) {
-            if ($base64) {
-                return $this->fileToBase64($file);
-            }
-            return $file;
+        if ($file) {
+            $res = ImagePng($bgImgData, $file, 8); //保存到本地
+            ImageDestroy($bgImgData);
+            return true;
         }
-        $this->error = '图片保存失败';
+        $this->error = '图片生成失败';
         return false;
     }
 
     /**
-     * getFontPath
+     * getFontPath 字体
      * @return string
      */
     public function getFontPath()
     {
-        $this->fontPath = dirname(__FILE__) . '/ttf/fonts.ttf';
-        return $this->fontPath;
+        return dirname(__FILE__) . '/ttf/fonts.ttf';
     }
 
     /**
