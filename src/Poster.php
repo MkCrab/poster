@@ -3,149 +3,61 @@
 namespace Mkcrab\Poster;
 
 /**
- * Class PosterFactory
- * Author MK 生成海报
- * @package App\Factory
+ * Class Poster
+ * author mkcrab
+ * @package Mkcrab\Poster
  */
 class Poster
 {
 
     /**
-     * 配置
-     * @var array
-     */
-    public $config = [];
-
-    /**
-     * 错误信息
-     * @var string
-     */
-    public $error = '';
-
-    /**
-     * 背景
-     * @var string
-     */
-    private $backGroundImage = '';
-
-    /**
-     * 海拔数据
-     * @var null
-     */
-    private $bgImageData = null;
-
-    /**
-     * 文字组
-     * @var array
-     */
-    private $textDefault = [
-        'name' => '', //图片名称，用于出错时定位
-        'url' => '', //图片路径
-        'stream' => 0, //图片数据流，与url二选一
-        'left' => 0, //左边距
-        'top' => 0, //上边距
-        'right' => 0, //有边距
-        'bottom' => 0, //下边距
-        'width' => 0, //宽
-        'height' => 0, //高
-        'radius' => 0, //圆角度数，最大值为显示宽度的一半
-        'opacity' => 100, //透明度
-    ];
-
-    /**
-     * 图片组
-     * @var array
-     */
-    private $imageDefault = [
-        'text' => '', //显示文本
-        'left' => 0, //左边距,数字或者center,水平居中
-        'top' => 0, //上边距,数字或者center,垂直居中
-        'width' => 0, //文本框宽度，设置后可实现文字换行
-        'fontSize' => 32, //字号
-        'fontColor' => '255,255,255', //字体颜色
-        'angle' => 0, //倾斜角度
-    ];
-
-    /**
-     * 海报配置信息
-     * @param $config array 指定的配置信息
-     * 合并后的完整配置信息
-     */
-    public function config($config = [])
-    {
-        $this->backGroundImage = isset($config['bg_url']) ? $config['bg_url'] : '';
-        if (isset($config['image']) && $config['image']) {
-            foreach ($config['image'] as $k => $v) {
-                $this->config['image'][$k] = array_merge($this->imageDefault, $v);
-            }
-        } else {
-            $this->config['image'] = [];
-        }
-        if (isset($config['text']) && $config['text']) {
-            foreach ($config['text'] as $k => $v) {
-                $this->config['text'][$k] = array_merge($this->textDefault, $v);
-            }
-        } else {
-            $this->config['text'] = [];
-        }
-        return $this;
-    }
-
-    /**
      * 合并生成海报
-     * @param $file string 指定生成的图片路径
-     * @return string or bool 图片数据流或者处理结果状态
+     * @param array $config 配置组
+     * @param string $path 指定生成的图片路径
+     * @return string | bool 图片数据流或者处理结果状态
      */
-    public function make($file = '')
+    public function poster($config, $path)
     {
-        if (!$this->backGroundImage || ((strpos($this->backGroundImage, 'http') === false) && !is_file($this->backGroundImage))) {
-            $this->error = '未设置背景图片';
+        if (!$config['bg_url'] || ((strpos($config['bg_url'], 'http') === false) && !is_file($config['bg_url']))) {
             return false;
         }
-        // 处理背景
-        if (!$this->bgImageData) {
-            $backgroundInfo = getimagesize($this->backGroundImage);
-            $backgroundFun = 'imagecreatefrom' . image_type_to_extension($backgroundInfo[2], false);
-            $bgData = $backgroundFun($this->backGroundImage);
-            $backgroundWidth = imagesx($bgData); //背景宽度
-            $backgroundHeight = imagesy($bgData); //背景高度
-            $this->bgImageData = imageCreatetruecolor($backgroundWidth, $backgroundHeight);
-            //创建透明背景色，主要127参数，其他可以0-255，因为任何颜色的透明都是透明
-            $transparent = imagecolorallocatealpha($this->bgImageData, 0, 0, 0, 127);
-            //指定颜色为透明
-            imagecolortransparent($this->bgImageData, $transparent);
-            //保留透明颜色
-            imagesavealpha($this->bgImageData, true);
-            //填充图片颜色
-            imagefill($this->bgImageData, 0, 0, $transparent);
-            imagecopyresampled($this->bgImageData, $bgData, 0, 0, 0, 0, $backgroundWidth, $backgroundHeight, $backgroundWidth, $backgroundHeight);
-        }
 
-        $bgImgData = $this->bgImageData;
+        $backgroundInfo = getimagesize($config['bg_url']);
+        $backgroundFun = 'imagecreatefrom' . image_type_to_extension($backgroundInfo[2], false);
+        $bgData = $backgroundFun($config['bg_url']);
+        $backgroundWidth = imagesx($bgData); //背景宽度
+        $backgroundHeight = imagesy($bgData); //背景高度
+        $bgImgData = imageCreatetruecolor($backgroundWidth, $backgroundHeight);
+        //创建透明背景色，主要127参数，其他可以0-255，因为任何颜色的透明都是透明
+        $transparent = imagecolorallocatealpha($bgImgData, 0, 0, 0, 127);
+        //指定颜色为透明
+        imagecolortransparent($bgImgData, $transparent);
+        //保留透明颜色
+        imagesavealpha($bgImgData, true);
+        //填充图片颜色
+        imagefill($bgImgData, 0, 0, $transparent);
+        imagecopyresampled($bgImgData, $bgData, 0, 0, 0, 0, $backgroundWidth, $backgroundHeight, $backgroundWidth, $backgroundHeight);
 
         //处理图片
-        if ($this->config['image']) {
-            foreach ($this->config['image'] as $val) {
+        if ($config['image']) {
+            foreach ($config['image'] as $val) {
                 if ($val['stream']) { //如果传的是字符串图像流
                     $info = getimagesizefromstring($val['stream']);
                     $res = imagecreatefromstring($val['stream']);
-                } elseif ($val['url'] && (strpos($val['url'], 'http') !== FALSE)) {
+                } elseif ($val['url'] && (strpos($val['url'], 'http') !== false)) {
                     $data = file_get_contents($val['url']);
                     if (!$data) {
-                        $this->error = '读取[' . $val['name'] . ']图片失败';
                         return false;
                     }
                     $info = getimagesizefromstring($data);
                     $res = imagecreatefromstring($data);
                 } else {
-                    if (!$val['url'] || ((strpos($val['url'], 'http') === FALSE) && !is_file($val['url']))) {
-                        $this->error = '[' . $val['name'] . ']图片不存在';
+                    if (!$val['url'] || ((strpos($val['url'], 'http') === false) && !is_file($val['url']))) {
                         return false;
                     }
                     $info = getimagesize($val['url']);
                     $function = 'imagecreatefrom' . image_type_to_extension($info[2], false);
                     if (!function_exists($function)) {
-                        $this->error = '[' . $val['name'] . ']图片格式不支持';
                         return false;
                     }
                     $res = $function($val['url']);
@@ -162,7 +74,6 @@ class Poster
                         $val['height'] = $resHeight;
                     }
                     if ($val['radius'] > round($val['width'] / 2)) {
-                        $this->error = '[' . $val['name'] . ']的圆角度数最大不能超过：' . (round($val['width'] / 2));
                         return false;
                     }
                     $canvas = $this->setRadiusImage($res, $resWidth, $resHeight, $val['width'], $val['height'], $val['radius']);
@@ -187,10 +98,9 @@ class Poster
         }
 
         //处理文字
-        if ($this->config['text']) {
+        if ($config['text']) {
             mb_internal_encoding("UTF-8"); // 设置编码
-            foreach ($this->config['text'] as $val) {
-
+            foreach ($config['text'] as $val) {
                 $fontPath = $this->getFontPath();
                 if ($val['width']) {
                     $val['text'] = $this->stringAutoWrap($val['text'], $val['fontSize'], $val['angle'], $fontPath, $val['width'], false);
@@ -211,12 +121,11 @@ class Poster
                 imagettftext($bgImgData, $val['fontSize'], $val['angle'], $val['left'], $val['top'], $fontColor, $fontPath, $val['text']);
             }
         }
-        if ($file) {
-            $res = ImagePng($bgImgData, $file, 8); //保存到本地
+        if ($path) {
+            $res = ImagePng($bgImgData, $path, 8); //保存到本地
             ImageDestroy($bgImgData);
             return true;
         }
-        $this->error = '图片生成失败';
         return false;
     }
 
@@ -227,31 +136,6 @@ class Poster
     public function getFontPath()
     {
         return dirname(__FILE__) . '/ttf/fonts.ttf';
-    }
-
-    /**
-     * 抛出异常信息
-     * @return string 异常信息说明
-     */
-    public function getErrorMessage()
-    {
-        return $this->error;
-    }
-
-    /**
-     * 根据文字长度计算出行数
-     * @param $string string 需要显示的文字
-     * @param $info array 文字显示设置
-     * @return int 返回文字行数
-     */
-    public function getFontLines($string, $info)
-    {
-        $arr = ['fontSize', 'angle', 'width'];
-        $setting = [];
-        foreach ($arr as $key) {
-            $setting[$key] = isset($info[$key]) ? $info[$key] : $this->textDefault[$key];
-        }
-        return $this->stringAutoWrap($string, $setting['fontSize'], $setting['angle'], $this->getFontPath(), $setting['width'], true);
     }
 
     /**
@@ -368,9 +252,6 @@ class Poster
             case 3:
                 $type = "png";
                 break;
-            default:
-                $this->error = '未知图片格式';
-                return false;
         }
         return 'data:image/' . $type . ';base64,' . $base64Content;
     }
@@ -388,7 +269,6 @@ class Poster
             file_put_contents($url, $data);
             return $url;
         }
-        $this->error = 'base64图片格式错误';
         return false;
     }
 }
