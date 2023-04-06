@@ -1,0 +1,21 @@
+{
+  "name": "mkcrab/poster",
+  "description": "a poster library",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Mkcrab\\Poster\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "MK",
+      "email": "2929106545@qq.com"
+    }
+  ],
+  "minimum-stability": "beta",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.0"
+  }
+}
