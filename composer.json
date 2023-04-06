@@ -1,6 +1,6 @@
 {
   "name": "mkcrab/poster",
-  "description": "a poster library",
+  "description": "图片海报，图片合成，合成海报",
   "type": "library",
   "autoload": {
     "psr-4": {
@@ -9,11 +9,11 @@
   },
   "authors": [
     {
-      "name": "MK",
+      "name": "mkcrab",
       "email": "2929106545@qq.com"
     }
   ],
-  "minimum-stability": "beta",
+  "minimum-stability": "dev",
   "license": "MIT",
   "require": {
     "php": ">=7.0"
